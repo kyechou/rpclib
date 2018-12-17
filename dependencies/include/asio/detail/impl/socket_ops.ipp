@@ -43,6 +43,8 @@
 
 #include "asio/detail/push_options.hpp"
 
+#include "timestamping.hpp"
+
 namespace clmdep_asio {
 namespace detail {
 namespace socket_ops {
@@ -777,12 +779,19 @@ signed_size_type recv(socket_type s, buf* bufs, size_t count,
   ec = clmdep_asio::error_code();
   return bytes_transferred;
 #else // defined(ASIO_WINDOWS) || defined(__CYGWIN__)
+  char control[1024];
+  memset(control, 0, sizeof(control));
   msghdr msg = msghdr();
   msg.msg_iov = bufs;
   msg.msg_iovlen = static_cast<int>(count);
+  msg.msg_control = control;
+  msg.msg_controllen = sizeof(control);
   signed_size_type result = error_wrapper(::recvmsg(s, &msg, flags), ec);
   if (result >= 0)
+  {
     ec = clmdep_asio::error_code();
+    printstamps(&msg);
+  }
   return result;
 #endif // defined(ASIO_WINDOWS) || defined(__CYGWIN__)
 }

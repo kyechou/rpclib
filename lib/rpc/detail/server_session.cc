@@ -8,6 +8,8 @@
 
 #include "rpc/detail/log.h"
 
+#include "timestamping.hpp"
+
 namespace rpc {
 namespace detail {
 
@@ -29,7 +31,10 @@ server_session::server_session(server *srv, RPCLIB_ASIO::io_service *io,
                                               // [sztomi 2016-01-13]
 }
 
-void server_session::start() { do_read(); }
+void server_session::start() {
+    ts_setup(socket_.native_handle());
+    do_read();
+}
 
 void server_session::close() {
     LOG_INFO("Closing session.");

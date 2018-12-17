@@ -51,10 +51,26 @@ public:
     buffer_sequence_adapter<clmdep_asio::mutable_buffer,
         MutableBufferSequence> bufs(o->buffers_);
 
-    return socket_ops::non_blocking_recv(o->socket_,
+    bool res;
+    char buf[4];
+    size_t bytes;
+    struct iovec iov;
+    clmdep_asio::error_code ec;
+
+    iov.iov_base = buf;
+    iov.iov_len = sizeof(buf);
+
+    res = socket_ops::non_blocking_recv(o->socket_,
         bufs.buffers(), bufs.count(), o->flags_,
         (o->state_ & socket_ops::stream_oriented) != 0,
         o->ec_, o->bytes_transferred_);
+    do {
+        socket_ops::non_blocking_recv(o->socket_, &iov, 1,
+            o->flags_|MSG_ERRQUEUE,
+            (o->state_ & socket_ops::stream_oriented) != 0, ec, bytes);
+    } while (!ec);
+
+    return res;
   }
 
 private:

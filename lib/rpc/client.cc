@@ -17,6 +17,8 @@
 #include "rpc/detail/dev_utils.h"
 #include "rpc/detail/response.h"
 
+#include "timestamping.hpp"
+
 using namespace RPCLIB_ASIO;
 using RPCLIB_ASIO::ip::tcp;
 using namespace rpc::detail;
@@ -52,6 +54,7 @@ struct client::impl {
                     is_connected_ = true;
                     state_ = client::connection_state::connected;
                     conn_finished_.notify_all();
+                    ts_setup(writer_->socket_.native_handle());
                     do_read();
                 } else {
                     LOG_ERROR("Error during connection: {}", ec);
